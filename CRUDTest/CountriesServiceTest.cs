@@ -12,6 +12,7 @@ namespace CRUDTest
             _countriesServices = new CountriesService();
         }
 
+        #region AddCountry
         //When CountryAdd Request is null, it should throw Argument null exception
         [Fact]
         public void AddCountry_NullCountry()
@@ -73,7 +74,9 @@ namespace CRUDTest
             Assert.True(countryResponse.CountryID != Guid.Empty);
             Assert.Contains(countryResponse, country_List);
         }
+        #endregion
 
+        #region ValidateCountries
         //Get all Counties
         [Fact]
         public void ValidateAllCountries()
@@ -110,5 +113,36 @@ namespace CRUDTest
            //Assert
            Assert.Empty(countryResponses);
         }
+        #endregion
+
+
+        #region Get Country by ID
+
+        [Fact]
+        public void GetCountrybyID_NullCountryId() 
+        {
+            // Arrange
+            Guid? countryId = null;
+
+            //Act
+            CountryResponse? countryResponse_from_GetCountryById_method = _countriesServices.GetCountrybyId(countryId);
+
+            //Assert
+            Assert.Null(countryResponse_from_GetCountryById_method);
+        }
+
+        [Fact]
+        //Validate: Country if valid country id is provided
+        public void GetCountry_by_ValidCountry_ID()
+        {
+            // Arrange
+            CountryAddRequest countryAddRequest = new CountryAddRequest() { CountryName= "Russia"};
+            CountryResponse countryResponse_fromAdd = _countriesServices.AddCountry(countryAddRequest);
+
+            // Act
+            CountryResponse? countryResponse_fromGet =  _countriesServices.GetCountrybyId(countryResponse_fromAdd.CountryID);
+            Assert.Equal(countryResponse_fromAdd, countryResponse_fromGet);
+        }
+        #endregion
     }
 }

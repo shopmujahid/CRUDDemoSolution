@@ -18,7 +18,7 @@ namespace ServiceContracts.DTO
 
         public override bool Equals(object? obj)
         {
-            if (true)
+            if (obj == null)
             {
                 return false;
             }

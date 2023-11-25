@@ -38,6 +38,19 @@ namespace Services
             return country.ToCountryResponse();
         }
 
+        public CountryResponse? GetCountrybyId(Guid? countryId)
+        {
+            if (countryId == null)
+            {
+                return null;
+            }
+            Country? country = _countries.FirstOrDefault(temp => temp.CountryId == countryId);
+
+            if (country == null)
+                return null;
+            return country.ToCountryResponse();
+        }
+
         public List<CountryResponse> GetCountryList()
         {
             return _countries.Select(country => country.ToCountryResponse()).ToList();

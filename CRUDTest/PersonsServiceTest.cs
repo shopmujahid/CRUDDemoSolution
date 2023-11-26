@@ -72,8 +72,6 @@ namespace CRUDTest
             foreach (var request in personAddRequestList_from_add)
             {
                 PersonResponse personResponse = _personService.AddPerson(request);
-                _testOutputHelper.WriteLine("Person: " + personResponse.ToString());
-                _testOutputHelper.WriteLine("Country1: " + countryResponse1_from_Add.ToString()); ;
                 personResponseList_from_Add.Add(personResponse);
             }
         }
@@ -108,12 +106,15 @@ namespace CRUDTest
         public void AddPerson_ProperPersonDetails()
         {
             //Arrange
+            
+            CountryAddRequest countryAddRequest = new CountryAddRequest() { CountryName ="Canada"};
+            CountryResponse countryResponse = _countryServices.AddCountry(countryAddRequest);
             PersonAddRequest? personAddRequest = new PersonAddRequest() 
             { 
                 PersonName = "Sujahid", 
                 Email = "person@example.com", 
                 Address = "sample address", 
-                CountryId = Guid.NewGuid(), 
+                CountryId = countryResponse.CountryID, 
                 Gender = GenderOptions.Male, 
                 DateOfBirth = DateTime.Parse("2000-01-01"), 
                 RecieveNewsLetters = true
@@ -300,28 +301,118 @@ namespace CRUDTest
             {
                 _testOutputHelper.WriteLine(person.ToString());
             }
-
+            List<PersonResponse> allPersons = _personService.GetAllPersons();
             //Act
-            List<PersonResponse>? personResponseList_from_get = _personService.GetFilteredPersons(nameof(Person.PersonName), "hid");
+            List<PersonResponse> personResponseList_from_sort = _personService.GetSortedPersons(allPersons, nameof(Person.PersonName), SortOrderOptions.ASC);
+            
             //Print Person list from GetAllPersons
             _testOutputHelper.WriteLine("Actual: ");
-            foreach (PersonResponse person in personResponseList_from_get)
+            foreach (PersonResponse person in personResponseList_from_sort)
             {
                 _testOutputHelper.WriteLine(person.ToString());
             }
 
-            //Assert
-            foreach (PersonResponse person_response_from_add in personResponseList_from_Add)
-            {
-                if (person_response_from_add.PersonName != null)
-                {
-                    if (person_response_from_add.PersonName.Contains("ma", StringComparison.OrdinalIgnoreCase))
-                    {
-                        Assert.Contains(person_response_from_add, personResponseList_from_get);
-                    }
-                }
+            personResponseList_from_Add = personResponseList_from_Add.OrderBy(x => x.PersonName).ToList();
 
+            //Assert
+            for (int i = 0; i < personResponseList_from_Add.Count; i++)
+            {
+                Assert.Equal(personResponseList_from_Add[i], personResponseList_from_sort[i]);
             }
+        }
+        #endregion
+
+        #region Update Person
+
+        [Fact]
+        public void UpdatePerson_NullRequest()
+        {
+            //Arrange
+            PersonUpdateRequest? personUpdateRequest = null;
+
+            //Assert
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                _personService.UpdatePerson(personUpdateRequest);
+            });
+            
+        }
+
+
+        [Fact]
+        public void UpdatePerson_InvalidPersonId()
+        {
+            //Arrange
+            PersonUpdateRequest? personUpdateRequest = new PersonUpdateRequest() { PersonId = Guid.NewGuid()};
+
+            //Assert
+            Assert.Throws<ArgumentException>(() =>
+            {
+                _personService.UpdatePerson(personUpdateRequest);
+            });
+
+        }
+        // When Person name is null, it should throw argument exception
+        [Fact]
+        public void UpdatePerson_NullPersonName()
+        {
+            // Arrange
+            AddDummyPersons();
+            PersonResponse personResponseToUpdate = personResponseList_from_Add.FirstOrDefault(c => c.PersonName=="Mujahid");
+            PersonUpdateRequest personUpdateRequest = personResponseToUpdate.ToPersonUpdateRequest();
+
+            // Act
+            personUpdateRequest.PersonName = null;
+
+            //Assert
+            Assert.Throws<ArgumentException>(() =>
+            {
+                _personService.UpdatePerson(personUpdateRequest);
+            });
+        }
+
+        [Fact]
+        public void UpdatePerson_ValidDetails ()
+        {
+            AddDummyPersons();
+            PersonResponse personResponseToUpdate = personResponseList_from_Add.FirstOrDefault(c => c.PersonName == "Mujahid");
+            PersonUpdateRequest personUpdateRequest = personResponseToUpdate.ToPersonUpdateRequest();
+
+            // Act
+            personUpdateRequest.PersonName = "Updated Mujahid";
+            personUpdateRequest.Email = "updatedemailmujahid@gmail.com";
+            PersonResponse personResponse_fromUpdate = _personService.UpdatePerson(personUpdateRequest);
+            PersonResponse personResponse_fromGet = _personService.GetPersonByPersonId(personResponse_fromUpdate.PersonId);
+
+            //Assert
+            Assert.Equal(personResponse_fromUpdate, personResponse_fromGet);
+        }
+        #endregion
+
+        #region Delete Person
+        [Fact]
+        public void DeletePerson_InvalidPersonID()
+        {
+            // Arrange
+            bool is_deleted = _personService.DeletePerson(Guid.NewGuid());
+
+            // Assert
+            Assert.False(is_deleted);
+        }
+
+        [Fact]
+        public void DeletePerson_ValidPersonId()
+        {
+            // Arrange
+            AddDummyPersons();
+
+            PersonResponse person_toDelete = personResponseList_from_Add.FirstOrDefault(x => x.PersonName == "Mujahid");
+
+            // Act
+            bool is_deleted = _personService.DeletePerson(person_toDelete.PersonId);
+
+            // Assert
+            Assert.True(is_deleted);
         }
         #endregion
     }

@@ -7,7 +7,8 @@ namespace Services
     public class CountriesService : ICountryServices
     {
         private readonly List<Country> _countries;
-        public CountriesService() { 
+        public CountriesService()
+        {
             _countries = new List<Country>();
         }
         public CountryResponse AddCountry(CountryAddRequest? countryRequest)
@@ -27,7 +28,7 @@ namespace Services
             // Validation: Country name in CountryAddRequest Can't be duplicate
             if (_countries.Where(temp => temp.CountryName == countryRequest.CountryName).Count() > 0)
             {
-                throw new ArgumentException("Given Country name already exist");   
+                throw new ArgumentException("Given Country name " + countryRequest.CountryName + " already exist");   
             }
 
             Country country = countryRequest.ToCountry();
@@ -48,6 +49,8 @@ namespace Services
 
             if (country == null)
                 return null;
+
+
             return country.ToCountryResponse();
         }
 

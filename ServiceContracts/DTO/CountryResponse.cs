@@ -37,6 +37,11 @@ namespace ServiceContracts.DTO
         {
             return base.GetHashCode();
         }
+
+        public override string ToString()
+        {
+            return $"CountryID: {CountryID}, Country Name: {CountryName}";
+        }
     }
 
     public static class CountryExtensions
